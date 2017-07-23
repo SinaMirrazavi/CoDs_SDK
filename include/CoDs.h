@@ -33,18 +33,30 @@ using namespace Eigen;
 class CoDs
 {
 public:
-	void initialize(int Num_state,bool defined_surface);
-
+	void initialize(int Dimen_state,double delta_dx,double F_d,bool defined_surface);
+	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3);
+	void Set_State(VectorXd State,VectorXd Original_Dynamic);
 
 
 private:
 
-	void Erorr();
+	void Error();
 
 	bool Surface_;
 
 
-	int Num_state_;
+	int Dimen_state_;
+
+
+	double Gamma_Value_;
+
+
+	VectorXd N_;
+	VectorXd q2_;
+	VectorXd q3_;
+	VectorXd X_;
+	VectorXd F_;
+
 
 };
 
@@ -57,7 +69,7 @@ public:
 
 private:
 
-	void Erorr();
+	void Error();
 
 };
 
