@@ -206,7 +206,6 @@ MatrixXd CoDs::Calculate_Modulation()
 
 	everyfalse();
 
-
 	return M_;
 
 }
