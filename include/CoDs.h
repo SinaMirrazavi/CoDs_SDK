@@ -43,6 +43,7 @@ public:
 
 	MatrixXd Calculate_Modulation();
 
+	VectorXd Get_Normal_Velocity();
 
 private:
 

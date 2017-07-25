@@ -94,16 +94,17 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3)
 {
 
-	if ((Normal.cols()==Dimen_state_)&&(q2.cols()==Dimen_state_)&&(q3.cols()==Dimen_state_)&&((N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<0.0001))
+	if ((Normal.rows()==Dimen_state_)&&(q2.rows()==Dimen_state_)&&(q3.rows()==Dimen_state_)&&((N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<0.0001))
 	{
 	}
 	else
 	{
 		cout<<"Something is wrong in Set_Gamma"<<endl;
 		cout<<"Dimension of states is: "<<Dimen_state_<<endl;
-		cout<<"N_ "<<N_<<endl;
-		cout<<"q2_ "<<q2_<<endl;
-		cout<<"q3_ "<<q3_<<endl;
+		cout<<"Normal "<<Normal.cols()<<endl;cout<<Normal<<endl;
+		cout<<"q2 "<<q2.cols()<<endl;cout<<q2<<endl;
+		cout<<"q3 "<<q3.cols()<<endl;cout<<q3<<endl;
+		cout<<"(N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0) "<<(N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<<endl;
 		Error();
 	}
 
@@ -118,8 +119,34 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3)
 
 	Q_inv_=Q_.inverse();
 	State_of_surface_is_set_=true;
-	cout<<"Q_ "<<Q_<<endl;
-	cout<<"Q_inv_"<<Q_inv_<<endl;
+}
+
+/**
+ *   @brief Setting the state of the system and the original dynamic
+ *
+ *   @param  State is the state of the system.
+ *   @param  Original_Dynamic is the original dynamic.
+ *   @return void
+ */
+
+void CoDs::Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic)
+{
+
+	if ((State.rows()==Dimen_state_)&&(Original_Dynamic.rows()==Dimen_state_)&&(DState.rows()==Dimen_state_))
+	{
+	}
+	else
+	{
+		cout<<"Something is wrong in Set_State"<<endl;
+		cout<<"Dimension of states is: "<<Dimen_state_<<endl;
+		cout<<"State "<<State<<endl;
+		cout<<"Original_Dynamic "<<Original_Dynamic<<endl;
+		Error();
+	}
+
+	X_=State;
+	DX_=DState;
+	F_=Original_Dynamic;
 }
 
 /**
@@ -205,6 +232,16 @@ MatrixXd CoDs::Calculate_Modulation()
 
 	return M_;
 
+}
+
+/**
+ *   @brief Calculate the normal velocity in three dimensions
+ *
+ *   @return The robot's normal velocity in three dimensions
+ */
+VectorXd CoDs::Get_Normal_Velocity()
+{
+	return Q_.transpose()*DX_;
 }
 
 /**
