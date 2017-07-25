@@ -144,9 +144,6 @@ void CoDs::Set_Mass_Matrix(MatrixXd M)
 	InvMass_=M.inverse();
 }
 
-
-
-
 /**
  *   @brief Calculate the modulation function
  *
@@ -210,11 +207,6 @@ MatrixXd CoDs::Calculate_Modulation()
 
 }
 
-
-
-
-
-
 /**
  *   @brief  If something is wrong, it is activated.
  *
@@ -248,9 +240,9 @@ inline bool CoDs::everythingisreceived()
 }
 
 /**
- *   @brief  To check if everything has been correctly initialized or set.
+ *   @brief  Set all the Boolens to false.
  *
- *   @return A flag, if it is true, life is shiny.
+ *   @return void.
  */
 inline void CoDs::everyfalse()
 {
