@@ -79,6 +79,7 @@ private:
 
 	MatrixXd Q_;
 	MatrixXd Q_inv_;
+	MatrixXd Lambda_;
 	MatrixXd M_;
 
 

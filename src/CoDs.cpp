@@ -71,6 +71,7 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 
 	Q_.resize(Dimen_state_,Dimen_state_); 			Q_.setZero();
 	Q_inv_.resize(Dimen_state_,Dimen_state_); 		Q_inv_.setZero();
+	Lambda_.resize(Dimen_state_,Dimen_state_); 		Lambda_.setZero();
 	M_.resize(Dimen_state_,Dimen_state_); 			M_.setZero();
 	InvMass_.resize(Dimen_state_,Dimen_state_); 	InvMass_.setIdentity();
 
@@ -147,6 +148,7 @@ void CoDs::Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic)
 	X_=State;
 	DX_=DState;
 	F_=Original_Dynamic;
+	State_of_system_is_set_=true;
 }
 
 /**
@@ -187,13 +189,14 @@ MatrixXd CoDs::Calculate_Modulation()
 		Error();
 	}
 
-	M_(0,0)=1; 	M_(1,1)=1; 	M_(2,2)=1;
+	Lambda_.setIdentity();
 
 	if (Gammma_Threshold_<=Gamma_Value_)
 	{
-		M_(0,0)=(1-exp(-(Gamma_Value_-Gammma_Threshold_)));
-		M_(1,1)=M_(0,0);
-		M_(2,2)=M_(0,0);
+		Lambda_(0,0)=(1-exp(-(Gamma_Value_-Gammma_Threshold_)));
+		Lambda_(1,1)=Lambda_(0,0);
+		Lambda_(2,2)=Lambda_(0,0);
+		cout<<"Free Motion"<<endl;
 	}
 	if((Gamma_Value_<Gammma_Threshold_)&&(0<Gamma_Value_))
 	{
@@ -202,18 +205,22 @@ MatrixXd CoDs::Calculate_Modulation()
 
 		if (Normal_velocity_robot_(0)<delta_dx_)
 		{
-			M_(0,0)=(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
+			Lambda_(0,0)=(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
+			cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<endl;
 		}
 		else
 		{
 			F_dNMN_=F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
 			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<0))
 			{
-				M_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
+				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
+				cout<<"It is going a slow as it needs to go "<<Lambda_(0,0)<<endl;
 			}
 			else if (0<=Normal_velocity_robot_(0))
 			{
-				M_(0,0)=-F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
+				Lambda_(0,0)=-F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
+			//	Lambda_(0,0)=-10;
+				cout<<"It is not going to that direction "<<Lambda_(0,0)<<endl;
 			}
 
 
@@ -224,11 +231,15 @@ MatrixXd CoDs::Calculate_Modulation()
 	{
 		NF_=(N_.transpose()*F_)(0,0);
 		F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-		M_(0,0)=-F_dNMN_;
+		Lambda_(0,0)=-F_dNMN_;
 	}
+	M_=Q_*Lambda_*Q_inv_;
 
-
-	everyfalse();
+/*
+	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
+	cout<<"M_ "<<endl;cout<<M_<<endl;
+*/
+//	everyfalse();
 
 	return M_;
 
