@@ -218,7 +218,7 @@ MatrixXd CoDs::Calculate_Modulation()
 			}
 			else if (0<=Normal_velocity_robot_(0))
 			{
-				Lambda_(0,0)=-F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
+				Lambda_(0,0)=-100*F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
 			//	Lambda_(0,0)=-10;
 				cout<<"It is not going to that direction "<<Lambda_(0,0)<<endl;
 			}
@@ -232,13 +232,13 @@ MatrixXd CoDs::Calculate_Modulation()
 		NF_=(N_.transpose()*F_)(0,0);
 		F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
 		Lambda_(0,0)=-F_dNMN_;
+		cout<<"The contact is established "<<Lambda_(0,0)<<endl;
 	}
 	M_=Q_*Lambda_*Q_inv_;
 
-/*
-	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
-	cout<<"M_ "<<endl;cout<<M_<<endl;
-*/
+
+/*	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
+	cout<<"M_ "<<endl;cout<<M_<<endl;*/
 //	everyfalse();
 
 	return M_;
