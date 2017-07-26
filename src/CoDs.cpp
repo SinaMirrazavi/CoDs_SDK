@@ -29,10 +29,12 @@
  *   @param  delta_dx is the desired velocity of the robot at the impact point.
  *   @param  F_d is the desired force of the robot at the contact phase.
  *   @param  Gammma_free_motion is the threshold which defines boundary between the free motion and the transition phases.
- *   @param  defined_surface is a boolean. If it is true, the package uses a planner surface defined in  the Gamma class. Otherwise it uses the user defined Gamma function.
+ *   @param  define_desired_contact_point is a boolean. If it is true, the robot hits the surfaces at the specified point.
+ *   @param  define_desired_leaving_point is a boolean. If it is true, the robot leaves the surfaces at the specified point.
  *   @return void
  */
-void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool defined_surface)
+//   @param  defined_surface is a boolean. If it is true, the package uses a planner surface defined in  the Gamma class. Otherwise it uses the user defined Gamma function.
+void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point)
 {
 
 	if (Dimen_state==3)
@@ -56,7 +58,9 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 		Error();
 	}
 	Dimen_state_=Dimen_state;
-	Surface_=defined_surface;
+	//	Surface_=defined_surface;
+	Leaving_point_=define_desired_leaving_point;
+	Contact_point_=define_desired_contact_point;
 	Gammma_Threshold_=Gammma_free_motion;
 
 	delta_dx_=delta_dx;
@@ -66,6 +70,9 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 
 	N_.resize(Dimen_state_);	q2_.resize(Dimen_state_);	q3_.resize(Dimen_state_);
 	X_.resize(Dimen_state_);	DX_.resize(Dimen_state_);	F_.resize(Dimen_state_);
+	Point_.resize(Dimen_state_);
+	Desired_Contact_point_.resize(Dimen_state_);
+	Desired_Leaving_point_.resize(Dimen_state_);
 
 
 
@@ -90,9 +97,10 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
  *   @param  Normal is the current normal vector to the surface.
  *   @param  q2 is the tangential vector to N;
  *   @param  q3 is the tangential vector to N and q3;
+ *   @param  Point_on_surface is a point on the surface;
  *   @return void
  */
-void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3)
+void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface)
 {
 
 	if ((Normal.rows()==Dimen_state_)&&(q2.rows()==Dimen_state_)&&(q3.rows()==Dimen_state_)&&((N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<0.0001))
@@ -115,6 +123,7 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3)
 	N_=Normal;
 	q2_=q2;
 	q3_=q3;
+	Point_=Point_on_surface;
 
 	Q_.col(0)=N_;	Q_.col(1)=q2_;	Q_.col(2)=q3_;
 
@@ -152,6 +161,39 @@ void CoDs::Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic)
 }
 
 /**
+ *   @brief Setting the desired contact point
+ *
+ *   @param  Contact_point is the desired contact point.
+ *   @return void
+ */
+void CoDs::Set_Contact_point(VectorXd Contact_point)
+{
+
+	if ((Contact_point.rows()==Dimen_state_)&&(Contact_point_)&&(State_of_surface_is_set_))
+	{
+	}
+	else
+	{
+		cout<<"Something is wrong in Set_Contact_point"<<endl;
+		cout<<"Contact_point_ is should be true "<<Contact_point_<<endl;
+		cout<<"State_of_surface_is_set_ is should be true (Set the surface definition before setting this) "<<State_of_surface_is_set_<<endl;
+		cout<<"Dimension of states is: "<<Dimen_state_<<endl;
+		cout<<"Dimension of Contact_point is: "<<Contact_point.rows()<<endl;
+		Error();
+	}
+
+
+	Desired_Contact_point_=Contact_point+N_*(N_.transpose()*(Point_-Contact_point));
+
+	State_of_contact_is_set_=true;
+	/*	cout<<"(N_.transpose()*(Point_-Contact_point)) "<<endl;cout<<N_*(N_.transpose()*(Point_-Contact_point))<<endl;
+	cout<<"Contact_point "<<endl;cout<<Contact_point<<endl;
+	cout<<"Point_ "<<endl;cout<<Point_<<endl;
+	cout<<"Desired_Contact_point_ "<<endl;cout<<Desired_Contact_point_<<endl;
+	cout<<"Contact_point "<<endl;cout<<Contact_point<<endl;*/
+}
+
+/**
  *   @brief Setting the mass matrix of the robot, it should be in the Cartesian space and it should be 3$\times$3
  *
  *   @param  State is the states of the system.
@@ -186,6 +228,8 @@ MatrixXd CoDs::Calculate_Modulation()
 		cout<<"Even though you forgot setting sth, you called Calculate_Modulation"<<endl;
 		cout<<"State_of_system_is_set_ "<<State_of_system_is_set_<<endl;
 		cout<<"State_of_surface_is_set_ "<<State_of_surface_is_set_<<endl;
+		cout<<"State_of_leaving_is_set_ should be "<<Leaving_point_<<" However it is "<<State_of_leaving_is_set_<<endl;
+		cout<<"State_of_contact_is_set_ should be "<<Contact_point_<<" However it is "<<State_of_contact_is_set_<<endl;
 		Error();
 	}
 
@@ -205,26 +249,35 @@ MatrixXd CoDs::Calculate_Modulation()
 
 		if (Normal_velocity_robot_(0)<delta_dx_)
 		{
-			Lambda_(0,0)=(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
+			Lambda_(0,0)=100*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
 			cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<endl;
 		}
 		else
 		{
 			F_dNMN_=F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<0))
+			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<delta_dx_/2))
 			{
 				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
 				cout<<"It is going a slow as it needs to go "<<Lambda_(0,0)<<endl;
 			}
-			else if (0<=Normal_velocity_robot_(0))
+			else if (delta_dx_/2<=Normal_velocity_robot_(0))
 			{
-				Lambda_(0,0)=-100*F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
-			//	Lambda_(0,0)=-10;
-				cout<<"It is not going to that direction "<<Lambda_(0,0)<<endl;
+				Lambda_(0,0)=-F_dNMN_*(exp(Normal_velocity_robot_(0))+exp(-Gamma_Value_/epsilon));
+				//	Lambda_(0,0)=-10;
+				cout<<"It is not going to that direction "<<Lambda_(0,0)<<" "<<NF_<<endl;
 			}
+		}
+
+		if (Contact_point_)
+		{
 
 
+	/*		Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);*/
 
+
+			Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
 		}
 	}
 	else if  (Gamma_Value_<=0)
@@ -234,12 +287,16 @@ MatrixXd CoDs::Calculate_Modulation()
 		Lambda_(0,0)=F_dNMN_;
 		cout<<"The contact is established "<<Lambda_(0,0)<<endl;
 	}
+
+
+
+
 	M_=Q_*Lambda_*Q_inv_;
 
 
 /*	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
 	cout<<"M_ "<<endl;cout<<M_<<endl;*/
-//	everyfalse();
+	//	everyfalse();
 
 	return M_;
 
@@ -278,12 +335,25 @@ void CoDs::Error()
  */
 inline bool CoDs::everythingisreceived()
 {
-/*	bool flag=true;
+	/*	bool flag=true;
 
 	flag=State_of_system_is_set_;
 	flag=State_of_surface_is_set_;*/
 
-	return ((State_of_system_is_set_)&&(State_of_surface_is_set_));
+	if ((Contact_point_)&&(Leaving_point_))
+	{
+		return ((State_of_system_is_set_)&&(State_of_surface_is_set_)&&(State_of_contact_is_set_)&&(State_of_leaving_is_set_));
+	}
+	else if (Contact_point_)
+	{
+		return ((State_of_system_is_set_)&&(State_of_surface_is_set_)&&(State_of_contact_is_set_));
+	}
+	else
+	{
+		return ((State_of_system_is_set_)&&(State_of_surface_is_set_));
+
+	}
+
 
 }
 
@@ -296,7 +366,8 @@ inline void CoDs::everyfalse()
 {
 	State_of_system_is_set_=false;
 	State_of_system_is_set_=false;
-
+	State_of_contact_is_set_=false;
+	State_of_leaving_is_set_=false;
 }
 
 
@@ -335,12 +406,13 @@ inline void CoDs::everyfalse()
 
 
 
+/*
 
-/**
+ *
  *   @brief  If something is wrong, it is activated.
  *
  *   @return void
- */
+
 void Gamma::Error()
 {
 
@@ -351,3 +423,4 @@ void Gamma::Error()
 	}
 
 }
+ */

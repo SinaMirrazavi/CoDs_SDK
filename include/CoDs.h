@@ -30,15 +30,17 @@
 using namespace std;
 using namespace Eigen;
 
-const double epsilon=10e-20;
+const double epsilon=10e-3;
 
 
 class CoDs
 {
 public:
-	void initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion,bool defined_surface);
-	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3);
+	void initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point);
+	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface);
 	void Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic);
+	void Set_Contact_point(VectorXd Contact_point);
+	void Set_Leaving_point(VectorXd Leaving_point);
 	void Set_Mass_Matrix(MatrixXd M);
 
 
@@ -52,9 +54,13 @@ private:
 	inline	bool everythingisreceived();
 	inline	void everyfalse();
 
-	bool Surface_;
+//	bool Surface_;
+	bool Leaving_point_;
+	bool Contact_point_;
 	bool State_of_system_is_set_;
 	bool State_of_surface_is_set_;
+	bool State_of_contact_is_set_;
+	bool State_of_leaving_is_set_;
 
 
 	int Dimen_state_;
@@ -73,6 +79,10 @@ private:
 	VectorXd N_;
 	VectorXd q2_;
 	VectorXd q3_;
+	VectorXd Point_;
+
+	VectorXd Desired_Contact_point_;
+	VectorXd Desired_Leaving_point_;
 
 	VectorXd X_;
 	VectorXd DX_;
@@ -94,6 +104,7 @@ private:
 
 };
 
+/*
 
 class Gamma
 {
@@ -106,6 +117,7 @@ private:
 	void Error();
 
 };
+*/
 
 
 
