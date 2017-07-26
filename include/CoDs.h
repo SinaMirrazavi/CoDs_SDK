@@ -24,6 +24,7 @@
 #include <fstream>
 #include <string>
 #include "eigen3/Eigen/Dense"
+#include <math.h>
 #include "ros/ros.h"
 
 using namespace std;

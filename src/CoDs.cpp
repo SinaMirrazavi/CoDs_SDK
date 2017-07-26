@@ -231,7 +231,7 @@ MatrixXd CoDs::Calculate_Modulation()
 	{
 		NF_=(N_.transpose()*F_)(0,0);
 		F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-		Lambda_(0,0)=-F_dNMN_;
+		Lambda_(0,0)=F_dNMN_;
 		cout<<"The contact is established "<<Lambda_(0,0)<<endl;
 	}
 	M_=Q_*Lambda_*Q_inv_;
