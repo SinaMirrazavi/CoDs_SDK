@@ -40,13 +40,17 @@ public:
 	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface);
 	void Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic);
 	void Set_Contact_point(VectorXd Contact_point);
-	void Set_Leaving_point(VectorXd Leaving_point);
+	void Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target,VectorXd & X_Target_Modulated_);
 	void Set_Mass_Matrix(MatrixXd M);
 
 
 	MatrixXd Calculate_Modulation();
 
 	VectorXd Get_Normal_Velocity();
+
+	double Get_Modulated_Surface();
+
+	VectorXd Get_Modulated_Target();
 
 private:
 
@@ -67,6 +71,7 @@ private:
 
 
 	double Gamma_Value_;
+	double Gamma_Modulated_Value_;
 	double Gammma_Threshold_;
 
 	double delta_dx_;
@@ -74,6 +79,8 @@ private:
 
 	double NF_;
 	double F_dNMN_;
+
+	double handle_double_;
 
 
 	VectorXd N_;
@@ -87,6 +94,8 @@ private:
 	VectorXd X_;
 	VectorXd DX_;
 	VectorXd F_;
+
+	VectorXd X_Target_Modulated_;
 
 	MatrixXd Q_;
 	MatrixXd Q_inv_;

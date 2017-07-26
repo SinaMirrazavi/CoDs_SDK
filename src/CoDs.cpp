@@ -71,8 +71,11 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	N_.resize(Dimen_state_);	q2_.resize(Dimen_state_);	q3_.resize(Dimen_state_);
 	X_.resize(Dimen_state_);	DX_.resize(Dimen_state_);	F_.resize(Dimen_state_);
 	Point_.resize(Dimen_state_);
+	X_Target_Modulated_.resize(Dimen_state_);
 	Desired_Contact_point_.resize(Dimen_state_);
 	Desired_Leaving_point_.resize(Dimen_state_);
+
+	Gamma_Modulated_Value_=0;
 
 
 
@@ -138,7 +141,6 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,Vector
  *   @param  Original_Dynamic is the original dynamic.
  *   @return void
  */
-
 void CoDs::Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic)
 {
 
@@ -194,6 +196,44 @@ void CoDs::Set_Contact_point(VectorXd Contact_point)
 }
 
 /**
+ *   @brief Setting the desired leaving point
+ *
+ *   @param  Leaving_point is the desired leaving point.
+ *   @return void
+ */
+void CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target,VectorXd &X_Target_Modulated_)
+{
+	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(X_Target_Modulated_.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
+	{
+	}
+	else
+	{
+		cout<<"Something is wrong in Set_Leaving_point"<<endl;
+		cout<<"Leaving_point_ is should be true "<<Leaving_point_<<endl;
+		cout<<"State_of_surface_is_set_ is should be true (Set the surface definition before setting this) "<<State_of_surface_is_set_<<endl;
+		cout<<"Dimension of states is: "<<Dimen_state_<<endl;
+		cout<<"Dimension of Leaving_point is: "<<Leaving_point.rows()<<endl;
+		cout<<"Dimension of X_Target is: "<<X_Target.rows()<<endl;
+		cout<<"Dimension of X_Target_Modulated_ is: "<<X_Target_Modulated_.rows()<<endl;
+		Error();
+	}
+
+
+	Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
+
+	X_Target_Modulated_=X_Target;
+	Gamma_Value_=Gamma_Modulated_Value_;
+	if  (Gamma_Value_<=0)
+	{
+		handle_double_=((Desired_Leaving_point_-X_).transpose()*(Desired_Leaving_point_-Desired_Contact_point_))(0,0);
+		Gamma_Modulated_Value_=Gamma_Value_+(handle_double_)*exp(-handle_double_/epsilon);
+		X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
+	}
+
+	State_of_leaving_is_set_=true;
+}
+
+/**
  *   @brief Setting the mass matrix of the robot, it should be in the Cartesian space and it should be 3$\times$3
  *
  *   @param  State is the states of the system.
@@ -234,7 +274,7 @@ MatrixXd CoDs::Calculate_Modulation()
 	}
 
 	Lambda_.setIdentity();
-
+	Gamma_Modulated_Value_=Gamma_Value_;
 	if (Gammma_Threshold_<=Gamma_Value_)
 	{
 		Lambda_(0,0)=(1-exp(-(Gamma_Value_-Gammma_Threshold_)));
@@ -242,6 +282,7 @@ MatrixXd CoDs::Calculate_Modulation()
 		Lambda_(2,2)=Lambda_(0,0);
 		cout<<"Free Motion"<<endl;
 	}
+
 	if((Gamma_Value_<Gammma_Threshold_)&&(0<Gamma_Value_))
 	{
 		Normal_velocity_robot_=Q_.transpose()*DX_;
@@ -270,9 +311,7 @@ MatrixXd CoDs::Calculate_Modulation()
 
 		if (Contact_point_)
 		{
-
-
-	/*		Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+			/*		Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
 			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);*/
 
 
@@ -294,7 +333,7 @@ MatrixXd CoDs::Calculate_Modulation()
 	M_=Q_*Lambda_*Q_inv_;
 
 
-/*	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
+	/*	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
 	cout<<"M_ "<<endl;cout<<M_<<endl;*/
 	//	everyfalse();
 
@@ -373,8 +412,15 @@ inline void CoDs::everyfalse()
 
 
 
-
-
+/**
+ *   @brief  Getting the modulated surface
+ *
+ *   @return Modulated surface.
+ */
+double CoDs::Get_Modulated_Surface()
+{
+	return Gamma_Modulated_Value_;
+}
 
 
 
