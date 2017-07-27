@@ -242,7 +242,7 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 			Motion_Phases_[2]=true;
 			X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
 		}
-		cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
+	//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
 	}
 
 	Gamma_Value_=Gamma_Modulated_Value_;
@@ -294,7 +294,7 @@ MatrixXd CoDs::Calculate_Modulation()
 	Gamma_Modulated_Value_=Gamma_Value_;
 	if (Gammma_Threshold_<=Gamma_Value_)
 	{
-		Lambda_(0,0)=(1-exp(-(Gamma_Value_-Gammma_Threshold_)));
+		Lambda_(0,0)=(1-exp(-(Gamma_Value_-Gammma_Threshold_)/epsilon));
 		Lambda_(1,1)=Lambda_(0,0);
 		Lambda_(2,2)=Lambda_(0,0);
 		cout<<"Free Motion"<<endl;
@@ -305,30 +305,30 @@ MatrixXd CoDs::Calculate_Modulation()
 		Normal_velocity_robot_=Q_.transpose()*DX_;
 		NF_=(N_.transpose()*F_)(0,0);
 
-		if (Normal_velocity_robot_(0)<delta_dx_)
+		if (Normal_velocity_robot_(0)<0.8*delta_dx_)
 		{
-			Lambda_(0,0)=(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
+			Lambda_(0,0)=10*(Gammma_Threshold_-Gamma_Value_)*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
 			cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<endl;
 		}
 		else
 		{
 			Motion_Phases_[0]=true;
 			F_dNMN_=F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<delta_dx_/10))
+			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<0))
 			{
 //				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
 				Lambda_(0,0)=0;
 				cout<<"It is going a slow as it needs to go "<<Lambda_(0,0)<<endl;
 			}
-			else if (delta_dx_/10<=Normal_velocity_robot_(0))
+			else if (delta_dx_/2<=Normal_velocity_robot_(0))
 			{
 				if (Normal_velocity_robot_(0)<0.01)
 				{
-					Lambda_(0,0)=-100*F_dNMN_*(exp(Normal_velocity_robot_(0))+exp(-Gamma_Value_/epsilon));
+					Lambda_(0,0)=-(Gammma_Threshold_-Gamma_Value_)*F_dNMN_*(exp(Normal_velocity_robot_(0))+exp(-Gamma_Value_/epsilon));
 				}
 				else
 				{
-					Lambda_(0,0)=-100*F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
+					Lambda_(0,0)=-(Gammma_Threshold_-Gamma_Value_)*F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
 				}
 				//	Lambda_(0,0)=-10;
 				cout<<"It is not going to that direction "<<Lambda_(0,0)<<" "<<NF_<<endl;
@@ -344,8 +344,8 @@ MatrixXd CoDs::Calculate_Modulation()
 
 */
 
-			Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
-			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
+			Lambda_(1,1)=(Gammma_Threshold_-Gamma_Value_)*((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+			Lambda_(2,2)=(Gammma_Threshold_-Gamma_Value_)*((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
 		}
 	}
 	else if  (Gamma_Value_<=0)
