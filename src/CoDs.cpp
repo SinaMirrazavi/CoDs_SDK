@@ -88,7 +88,10 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 
 	Normal_velocity_robot_.resize(Dimen_state_); Normal_velocity_robot_.setZero();
 
-
+	Motion_Phases_[0]=false;
+	Motion_Phases_[1]=false;
+	Motion_Phases_[2]=false;
+	Motion_Phases_[3]=false;
 	everyfalse();
 
 }
@@ -199,11 +202,12 @@ void CoDs::Set_Contact_point(VectorXd Contact_point)
  *   @brief Setting the desired leaving point
  *
  *   @param  Leaving_point is the desired leaving point.
+ *   @param	 X_Target is the orginal taget of teh system.
  *   @return void
  */
-void CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target,VectorXd &X_Target_Modulated_)
+VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 {
-	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(X_Target_Modulated_.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
+	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
 	{
 	}
 	else
@@ -222,15 +226,28 @@ void CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target,VectorXd &
 	Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
 
 	X_Target_Modulated_=X_Target;
-	Gamma_Value_=Gamma_Modulated_Value_;
-	if  (Gamma_Value_<=0)
+	Gamma_Modulated_Value_=Gamma_Value_;
+
+	if (Motion_Phases_[1])
 	{
 		handle_double_=((Desired_Leaving_point_-X_).transpose()*(Desired_Leaving_point_-Desired_Contact_point_))(0,0);
-		Gamma_Modulated_Value_=Gamma_Value_+(handle_double_)*exp(-handle_double_/epsilon);
-		X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
+		Gamma_Modulated_Value_=Gamma_Value_-(handle_double_)*exp(-1000*handle_double_/epsilon);
+		if (exp(-handle_double_/epsilon)>1)
+		{
+			Motion_Phases_[3]=true;
+			Gamma_Modulated_Value_=20;
+		}
+		if (Gamma_Modulated_Value_<=0)
+		{
+			Motion_Phases_[2]=true;
+			X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
+		}
+		cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
 	}
 
+	Gamma_Value_=Gamma_Modulated_Value_;
 	State_of_leaving_is_set_=true;
+	return X_Target_Modulated_;
 }
 
 /**
@@ -290,20 +307,29 @@ MatrixXd CoDs::Calculate_Modulation()
 
 		if (Normal_velocity_robot_(0)<delta_dx_)
 		{
-			Lambda_(0,0)=100*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
+			Lambda_(0,0)=(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
 			cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<endl;
 		}
 		else
 		{
+			Motion_Phases_[0]=true;
 			F_dNMN_=F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<delta_dx_/2))
+			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<delta_dx_/10))
 			{
-				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
+//				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
+				Lambda_(0,0)=0;
 				cout<<"It is going a slow as it needs to go "<<Lambda_(0,0)<<endl;
 			}
-			else if (delta_dx_/2<=Normal_velocity_robot_(0))
+			else if (delta_dx_/10<=Normal_velocity_robot_(0))
 			{
-				Lambda_(0,0)=-F_dNMN_*(exp(Normal_velocity_robot_(0))+exp(-Gamma_Value_/epsilon));
+				if (Normal_velocity_robot_(0)<0.01)
+				{
+					Lambda_(0,0)=-100*F_dNMN_*(exp(Normal_velocity_robot_(0))+exp(-Gamma_Value_/epsilon));
+				}
+				else
+				{
+					Lambda_(0,0)=-100*F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
+				}
 				//	Lambda_(0,0)=-10;
 				cout<<"It is not going to that direction "<<Lambda_(0,0)<<" "<<NF_<<endl;
 			}
@@ -311,9 +337,12 @@ MatrixXd CoDs::Calculate_Modulation()
 
 		if (Contact_point_)
 		{
-			/*		Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
-			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(epsilon))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);*/
 
+/*
+			Lambda_(1,1)=((-10*(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+			Lambda_(2,2)=((-10*(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
+
+*/
 
 			Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
 			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
@@ -321,9 +350,14 @@ MatrixXd CoDs::Calculate_Modulation()
 	}
 	else if  (Gamma_Value_<=0)
 	{
+		Motion_Phases_[1]=true;
 		NF_=(N_.transpose()*F_)(0,0);
 		F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-		Lambda_(0,0)=F_dNMN_;
+//		Lambda_(0,0)=F_dNMN_;
+		Lambda_(0,0)=0;
+		Lambda_(1,1)=1;
+		Lambda_(2,2)=((-(q3_.transpose()*DX_*q2_.transpose()*(X_-Desired_Leaving_point_)-q2_.transpose()*DX_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0)/(epsilon))+Lambda_(0,0)*(q2_.transpose()*F_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0))/(q2_.transpose()*(X_-Desired_Leaving_point_)*q3_.transpose()*F_)(0,0);
+
 		cout<<"The contact is established "<<Lambda_(0,0)<<endl;
 	}
 
@@ -333,8 +367,8 @@ MatrixXd CoDs::Calculate_Modulation()
 	M_=Q_*Lambda_*Q_inv_;
 
 
-	/*	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
-	cout<<"M_ "<<endl;cout<<M_<<endl;*/
+	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
+	cout<<"M_ "<<endl;cout<<M_<<endl;
 	//	everyfalse();
 
 	return M_;
@@ -424,8 +458,16 @@ double CoDs::Get_Modulated_Surface()
 
 
 
+/**
+ *   @brief  Giving the state of task
+ *
+ *   @return Defining the state of task.
+ */
+bool CoDs::Is_the_task_being_done()
+{
 
-
+	return Motion_Phases_[3];
+}
 
 
 

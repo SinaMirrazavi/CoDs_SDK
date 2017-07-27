@@ -40,7 +40,7 @@ public:
 	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface);
 	void Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic);
 	void Set_Contact_point(VectorXd Contact_point);
-	void Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target,VectorXd & X_Target_Modulated_);
+	VectorXd Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target);
 	void Set_Mass_Matrix(MatrixXd M);
 
 
@@ -51,6 +51,8 @@ public:
 	double Get_Modulated_Surface();
 
 	VectorXd Get_Modulated_Target();
+
+	bool	Is_the_task_being_done();
 
 private:
 
@@ -65,6 +67,8 @@ private:
 	bool State_of_surface_is_set_;
 	bool State_of_contact_is_set_;
 	bool State_of_leaving_is_set_;
+
+	bool Motion_Phases_[1+1+1+1];// Phase 0=transition phase1= Contact phase2 leaving phase 3 everything is done
 
 
 	int Dimen_state_;
