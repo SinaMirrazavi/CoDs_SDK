@@ -344,8 +344,8 @@ MatrixXd CoDs::Calculate_Modulation()
 
 */
 
-			Lambda_(1,1)=(Gammma_Threshold_-Gamma_Value_)*((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
-			Lambda_(2,2)=(Gammma_Threshold_-Gamma_Value_)*((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
+			Lambda_(1,1)=(Gammma_Threshold_-Gamma_Value_)*((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(0.01*epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+			Lambda_(2,2)=(Gammma_Threshold_-Gamma_Value_)*((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(0.01*epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
 		}
 	}
 	else if  (Gamma_Value_<=0)
