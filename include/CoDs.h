@@ -32,6 +32,7 @@ using namespace Eigen;
 
 const double epsilon=10e-3;
 
+enum ENUM_Phase{Phase_Free_motion=0,Phase_Transition,Phase_Contact,Phase_Everything_is_done};
 
 class CoDs
 {
@@ -53,6 +54,7 @@ public:
 	VectorXd Get_Modulated_Target();
 
 	bool	Is_the_task_being_done();
+	ENUM_Phase	Which_phase_is_it();
 
 private:
 
@@ -68,8 +70,9 @@ private:
 	bool State_of_contact_is_set_;
 	bool State_of_leaving_is_set_;
 
-	bool Motion_Phases_[1+1+1+1];// Phase 0=transition phase1= Contact phase2 leaving phase 3 everything is done
+	bool Motion_Phases_[1+1+1+1];// Phase 0=transition phase 1= Contact phase 2=leaving phase 3 everything is done
 
+	ENUM_Phase	Phase_of_the_motion_;
 
 	int Dimen_state_;
 

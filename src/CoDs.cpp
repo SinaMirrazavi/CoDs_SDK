@@ -92,6 +92,8 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	Motion_Phases_[1]=false;
 	Motion_Phases_[2]=false;
 	Motion_Phases_[3]=false;
+
+	Phase_of_the_motion_=Phase_Free_motion;
 	everyfalse();
 
 }
@@ -242,7 +244,7 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 			Motion_Phases_[2]=true;
 			X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
 		}
-	//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
+		//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
 	}
 
 	Gamma_Value_=Gamma_Modulated_Value_;
@@ -297,11 +299,13 @@ MatrixXd CoDs::Calculate_Modulation()
 		Lambda_(0,0)=(1-exp(-(Gamma_Value_-Gammma_Threshold_)/epsilon));
 		Lambda_(1,1)=Lambda_(0,0);
 		Lambda_(2,2)=Lambda_(0,0);
+		Phase_of_the_motion_=Phase_Free_motion;
 		cout<<"Free Motion"<<endl;
 	}
 
 	if((Gamma_Value_<Gammma_Threshold_)&&(0<Gamma_Value_))
 	{
+		Phase_of_the_motion_=Phase_Transition;
 		Normal_velocity_robot_=Q_.transpose()*DX_;
 		NF_=(N_.transpose()*F_)(0,0);
 
@@ -316,7 +320,7 @@ MatrixXd CoDs::Calculate_Modulation()
 			F_dNMN_=F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
 			if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<0))
 			{
-//				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
+				//				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
 				Lambda_(0,0)=0;
 				cout<<"It is going a slow as it needs to go "<<Lambda_(0,0)<<endl;
 			}
@@ -338,11 +342,11 @@ MatrixXd CoDs::Calculate_Modulation()
 		if (Contact_point_)
 		{
 
-/*
+			/*
 			Lambda_(1,1)=((-10*(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
 			Lambda_(2,2)=((-10*(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
 
-*/
+			 */
 
 			Lambda_(1,1)=(Gammma_Threshold_-Gamma_Value_)*((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(0.01*epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
 			Lambda_(2,2)=(Gammma_Threshold_-Gamma_Value_)*((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(0.01*epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
@@ -350,10 +354,11 @@ MatrixXd CoDs::Calculate_Modulation()
 	}
 	else if  (Gamma_Value_<=0)
 	{
+		Phase_of_the_motion_=Phase_Contact;
 		Motion_Phases_[1]=true;
 		NF_=(N_.transpose()*F_)(0,0);
 		F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-//		Lambda_(0,0)=F_dNMN_;
+		//		Lambda_(0,0)=F_dNMN_;
 		Lambda_(0,0)=0;
 		Lambda_(1,1)=1;
 		Lambda_(2,2)=((-(q3_.transpose()*DX_*q2_.transpose()*(X_-Desired_Leaving_point_)-q2_.transpose()*DX_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0)/(epsilon))+Lambda_(0,0)*(q2_.transpose()*F_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0))/(q2_.transpose()*(X_-Desired_Leaving_point_)*q3_.transpose()*F_)(0,0);
@@ -362,7 +367,10 @@ MatrixXd CoDs::Calculate_Modulation()
 	}
 
 
-
+	if (Motion_Phases_[3]==true)
+	{
+		Phase_of_the_motion_=Phase_Everything_is_done;
+	}
 
 	M_=Q_*Lambda_*Q_inv_;
 
@@ -470,9 +478,16 @@ bool CoDs::Is_the_task_being_done()
 }
 
 
+/**
+ *   @brief  Giving the state of motion
+ *
+ *   @return Defining the state of motion.
+ */
 
-
-
+ENUM_Phase	CoDs::Which_phase_is_it()
+{
+	return Phase_of_the_motion_;
+}
 
 
 
