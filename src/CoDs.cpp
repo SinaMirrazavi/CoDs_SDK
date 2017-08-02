@@ -230,7 +230,7 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 	X_Target_Modulated_=X_Target;
 	Gamma_Modulated_Value_=Gamma_Value_;
 
-	if (Motion_Phases_[1])
+	if ((Motion_Phases_[1])&&(!Motion_Phases_[3]))
 	{
 		handle_double_=((Desired_Leaving_point_-X_).transpose()*(Desired_Leaving_point_-Desired_Contact_point_))(0,0);
 		Gamma_Modulated_Value_=Gamma_Value_-(handle_double_)*exp(-1000*handle_double_/epsilon);
@@ -293,10 +293,10 @@ MatrixXd CoDs::Calculate_Modulation()
 		cout<<"State_of_contact_is_set_ should be "<<Contact_point_<<" However it is "<<State_of_contact_is_set_<<endl;
 		Error();
 	}
-
+	Lambda_.setIdentity();
 	if(!Motion_Phases_[3])
 	{
-		Lambda_.setIdentity();
+
 		Gamma_Modulated_Value_=Gamma_Value_;
 		if (Gammma_Threshold_<=Gamma_Value_)
 		{
@@ -314,30 +314,30 @@ MatrixXd CoDs::Calculate_Modulation()
 			Normal_velocity_robot_=Q_.transpose()*DX_;
 			NF_=(N_.transpose()*F_)(0,0);
 
-			if (Normal_velocity_robot_(0)<0.8*delta_dx_)
+			if (Normal_velocity_robot_(0)<delta_dx_)
 			{
 				Lambda_(0,0)=100*(Gammma_Threshold_-Gamma_Value_)*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(Gamma_Value_*NF_);
-				cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<endl;
+				cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<" "<<NF_<<endl;
 			}
 			else
 			{
 				Motion_Phases_[0]=true;
 				F_dNMN_=F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
-				if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<0))
+				if ((delta_dx_<Normal_velocity_robot_(0))&&(Normal_velocity_robot_(0)<delta_dx_/2))
 				{
 					//				Lambda_(0,0)=-F_dNMN_*exp(-Gamma_Value_/epsilon);
 					Lambda_(0,0)=0;
 					cout<<"It is going a slow as it needs to go "<<Lambda_(0,0)<<endl;
 				}
-				else if (0<=Normal_velocity_robot_(0))
+				else if (delta_dx_/2<=Normal_velocity_robot_(0))
 				{
 					if (Normal_velocity_robot_(0)<0.01)
 					{
-						Lambda_(0,0)=-(Gammma_Threshold_-Gamma_Value_)*F_dNMN_*(exp(Normal_velocity_robot_(0))+exp(-Gamma_Value_/epsilon));
+						Lambda_(0,0)=-(Gammma_Threshold_-Gamma_Value_)*(exp(Normal_velocity_robot_(0)-delta_dx_/2)+exp(-Gamma_Value_/epsilon))*F_dNMN_/fabs(F_dNMN_);
 					}
 					else
 					{
-						Lambda_(0,0)=-(Gammma_Threshold_-Gamma_Value_)*F_dNMN_*(Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon));
+						Lambda_(0,0)=-(Gammma_Threshold_-Gamma_Value_)*(Normal_velocity_robot_(0)-delta_dx_/2+exp(-Gamma_Value_/epsilon))*F_dNMN_/fabs(F_dNMN_);
 					}
 					//	Lambda_(0,0)=-10;
 					cout<<"It is not going to that direction "<<Lambda_(0,0)<<" "<<NF_<<endl;
@@ -382,6 +382,8 @@ MatrixXd CoDs::Calculate_Modulation()
 
 	cout<<"Lambda_ "<<endl;cout<<Lambda_<<endl;
 	cout<<"M_ "<<endl;cout<<M_<<endl;
+/*	cout<<"Q_ "<<endl;cout<<Q_<<endl;
+	cout<<"Q_inv_ "<<endl;cout<<Q_inv_<<endl;*/
 	//	everyfalse();
 
 	return M_;
@@ -455,8 +457,6 @@ inline void CoDs::everyfalse()
 	State_of_contact_is_set_=false;
 	State_of_leaving_is_set_=false;
 }
-
-
 
 
 /**
