@@ -39,7 +39,7 @@ class CoDs
 public:
 	void initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point);
 	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface);
-	void Set_State(VectorXd State,VectorXd DState,VectorXd Original_Dynamic);
+	void Set_State(VectorXd State,VectorXd DState,VectorXd DState_real,VectorXd Original_Dynamic);
 	void Set_Contact_point(VectorXd Contact_point);
 	VectorXd Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target);
 	void Set_Mass_Matrix(MatrixXd M);
@@ -100,6 +100,7 @@ private:
 
 	VectorXd X_;
 	VectorXd DX_;
+	VectorXd DXState_real_;
 	VectorXd F_;
 
 	VectorXd X_Target_Modulated_;
@@ -114,6 +115,7 @@ private:
 
 
 	VectorXd Normal_velocity_robot_;
+	VectorXd Normal_velocity_robot_real_;
 
 
 
