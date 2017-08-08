@@ -321,7 +321,8 @@ MatrixXd CoDs::Calculate_Modulation()
 
 			if (Normal_velocity_robot_real_(0)<delta_dx_)
 			{
-				Lambda_(0,0)=5000*(Gammma_Threshold_-Gamma_Value_)*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(NF_);
+		//		Lambda_(0,0)=5000*(Gammma_Threshold_-Gamma_Value_)*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(NF_);
+				Lambda_(0,0)=2000*(Gammma_Threshold_-Gamma_Value_)*(delta_dx_-Normal_velocity_robot_(0)+exp(-Gamma_Value_/epsilon))/(NF_);
 				cout<<"It is going faster! "<<Lambda_(0,0)<<" "<<Normal_velocity_robot_(0)<<endl;
 /*				cout<<"DX_ "<<DX_<<endl;
 				cout<<"Q_.tra "<<Q_.transpose()<<endl;*/
@@ -355,8 +356,8 @@ MatrixXd CoDs::Calculate_Modulation()
 			{
 
 
-				Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon)))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
-				Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon)))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
+	//			Lambda_(1,1)=((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon)))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
+	//			Lambda_(2,2)=((-(q3_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q3_.transpose()*(X_-Desired_Contact_point_))(0,0)/(epsilon)))/(N_.transpose()*(X_-Desired_Contact_point_)*q3_.transpose()*F_)(0,0);
 
 
 /*				Lambda_(1,1)=(Gammma_Threshold_-Gamma_Value_)*((-(q2_.transpose()*DX_*N_.transpose()*(X_-Desired_Contact_point_)-N_.transpose()*DX_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0)/(0.1*epsilon))+Lambda_(0,0)*(N_.transpose()*F_*q2_.transpose()*(X_-Desired_Contact_point_))(0,0))/(N_.transpose()*(X_-Desired_Contact_point_)*q2_.transpose()*F_)(0,0);
@@ -370,6 +371,9 @@ MatrixXd CoDs::Calculate_Modulation()
 			NF_=(N_.transpose()*F_)(0,0);
 			F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
 			Lambda_(0,0)=F_dNMN_;
+			Lambda_(0,0)=0;
+			Lambda_(1,1)=0;
+			Lambda_(2,2)=0;
 		//	Lambda_(0,0)=0;
 /*			Lambda_(1,1)=0.01;
 			Lambda_(2,2)=0.01;*/
