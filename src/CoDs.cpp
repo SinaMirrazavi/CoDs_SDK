@@ -247,8 +247,8 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 		{
 			Motion_Phases_[2]=true;
 		//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
-		//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_;
-			X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
+			X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_;
+		//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
 		}
 		//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
 	}
@@ -309,6 +309,8 @@ MatrixXd CoDs::Calculate_Modulation()
 			Lambda_(2,2)=Lambda_(0,0);*/
 			Phase_of_the_motion_=Phase_Free_motion;
 			Motion_Phases_[1]=false;
+//			Motion_Phases_[3]=false;
+//			Motion_Phases_[2]=false;
 			cout<<"Free Motion"<<endl;
 		}
 
@@ -373,9 +375,9 @@ MatrixXd CoDs::Calculate_Modulation()
 			F_dNMN_=-F_d_*(N_.transpose()*InvMass_*N_)(0,0)/NF_;
 			Lambda_(0,0)=F_dNMN_;
 			//Lambda_(0,0)=0;
-/*			Lambda_(1,1)=0.1;
-			Lambda_(2,2)=0.1;*/
-		//	Lambda_(2,2)=((-10*(q3_.transpose()*DX_*q2_.transpose()*(X_-Desired_Leaving_point_)-q2_.transpose()*DX_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0)/(epsilon))+Lambda_(0,0)*(q2_.transpose()*F_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0))/(q2_.transpose()*(X_-Desired_Leaving_point_)*q3_.transpose()*F_)(0,0);
+/*			Lambda_(2,2)=0.1;*/
+			Lambda_(1,1)=0.1;
+			Lambda_(2,2)=((-10*(q3_.transpose()*DX_*q2_.transpose()*(X_-Desired_Leaving_point_)-q2_.transpose()*DX_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0)/(epsilon))+Lambda_(0,0)*(q2_.transpose()*F_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0))/(q2_.transpose()*(X_-Desired_Leaving_point_)*q3_.transpose()*F_)(0,0);
 		//	Lambda_(2,2)=((-10*(q3_.transpose()*DX_*q2_.transpose()*(X_-Desired_Leaving_point_)-q2_.transpose()*DX_*q3_.transpose()*(X_-Desired_Leaving_point_))(0,0)/(epsilon)))/(q2_.transpose()*(X_-Desired_Leaving_point_)*q3_.transpose()*F_)(0,0);
 			cout<<"The contact is established "<<Lambda_(0,0)<<endl;
 		}
