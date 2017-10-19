@@ -84,11 +84,18 @@ private:
 	double delta_dx_;
 	double F_d_;
 
-	double NF_;
-	double F_dNMN_;
+	double	handle_N_;
+	double	handle_q2_;
+	double	handle_q3_;
+
+	double 	nu_;
+
+
+	double Omega_;
 
 	double handle_double_;
 
+	VectorXd qF_;
 
 	VectorXd N_;
 	VectorXd q2_;
@@ -108,6 +115,7 @@ private:
 	MatrixXd Q_;
 	MatrixXd Q_inv_;
 	MatrixXd Lambda_;
+	MatrixXd Lambda_Bold_;
 	MatrixXd M_;
 
 
