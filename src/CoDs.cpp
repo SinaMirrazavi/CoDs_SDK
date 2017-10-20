@@ -245,13 +245,13 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 
 //	if (Gamma_Value_<>)
 //	{
-	cout<<"Gamma_Value_ "<<Gamma_Value_<<" "<<(Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0))<<endl;
-		Gamma_Modulated_Value_=Gamma_Value_+(Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
+	cout<<"Gamma_Value_ "<<Gamma_Value_<<" "<<(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0))<<endl;
+		Gamma_Modulated_Value_=Gamma_Value_+(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
 		if (Gamma_Modulated_Value_<=epsilon)
 		{
 			Motion_Phases_[2]=true;
 			//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
-			X_Target_Modulated_=Desired_Leaving_point_+N_;
+			X_Target_Modulated_=Desired_Leaving_point_+5*N_;
 			//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
 		}
 
