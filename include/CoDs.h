@@ -84,6 +84,7 @@ private:
 	double delta_dx_;
 	double F_d_;
 
+	double	handle_Omega_;
 	double	handle_N_;
 	double	handle_q2_;
 	double	handle_q3_;
