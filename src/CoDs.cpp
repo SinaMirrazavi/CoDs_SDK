@@ -99,7 +99,7 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	Motion_Phases_[2]=false;
 	Motion_Phases_[3]=false;
 
-	handle_Omega_=10;
+	handle_Omega_=20;
 
 	Omega_=1/Gammma_Threshold_;
 	nu_=-delta_dx_;
@@ -222,7 +222,8 @@ void CoDs::Set_Contact_point(VectorXd Contact_point)
  */
 VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 {
-	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
+//	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
+	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(State_of_surface_is_set_))
 	{
 	}
 	else
@@ -239,34 +240,40 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 
 
 	Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
-	Desired_Leaving_point_=2*Desired_Leaving_point_-Desired_Contact_point_;
-
-
+	if (Leaving_point_)
+	{
+		Desired_Leaving_point_=2*Desired_Leaving_point_-Desired_Contact_point_;
+	}
+	else
+	{
+		Desired_Leaving_point_=(Leaving_point+Desired_Contact_point_)/2;
+	}
 	X_Target_Modulated_=X_Target;
 	Gamma_Modulated_Value_=Gamma_Value_;
 
-//	if (Gamma_Value_<>)
-//	{
+	//	if (Gamma_Value_<>)
+	//	{
 	cout<<"Gamma_Value_ "<<Gamma_Value_<<" "<<(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0))<<endl;
-		Gamma_Modulated_Value_=Gamma_Value_+(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
-		if (Gamma_Modulated_Value_<=epsilon)
-		{
-			Motion_Phases_[2]=true;
-			//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
-			X_Target_Modulated_=Desired_Leaving_point_+5*N_;
-			//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
-		}
+	Gamma_Modulated_Value_=Gamma_Value_+(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
+	if (Gamma_Modulated_Value_<=epsilon)
+	{
+		Motion_Phases_[2]=true;
+		//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
+		X_Target_Modulated_=Desired_Leaving_point_+5*N_;
+
+		//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
+	}
 
 
-		/*	if (-handle_double_>0)
+	/*	if (-handle_double_>0)
 		{
 			Motion_Phases_[3]=true;
 			Gamma_Modulated_Value_=20;
 			X_Target_Modulated_=Desired_Leaving_point_+N_;
 		}
-*/
-		//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
-//	}
+	 */
+	//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
+	//	}
 
 	Gamma_Value_=Gamma_Modulated_Value_;
 	State_of_leaving_is_set_=true;
@@ -320,7 +327,7 @@ MatrixXd CoDs::Calculate_Modulation()
 		if (delta_dx_==0)
 		{
 			cout<<"Elastic "<<endl;
-//			Gamma_Modulated_Value_=Gamma_Value_;
+			//			Gamma_Modulated_Value_=Gamma_Value_;
 
 			qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
 			qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
@@ -395,7 +402,7 @@ MatrixXd CoDs::Calculate_Modulation()
 		else
 		{
 			cout<<"Inelastic "<<endl;
-//			Gamma_Modulated_Value_=Gamma_Value_;
+			//			Gamma_Modulated_Value_=Gamma_Value_;
 
 			qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
 			qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
@@ -458,7 +465,7 @@ MatrixXd CoDs::Calculate_Modulation()
 				}
 
 
-//				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
+				//				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q2_=-2*Omega_*((q2_.transpose()*DX_)(0))-Omega_*Omega_*((q2_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q3_=-2*Omega_*((q3_.transpose()*DX_)(0))-Omega_*Omega_*((q3_.transpose()*(X_-Desired_Contact_point_))(0));
 
