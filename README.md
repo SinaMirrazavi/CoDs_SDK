@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/sinamr66/CoDs_SDK.svg?branch=master)](https://travis-ci.org/sinamr66/CoDs_SDK)
 # Dynamical system based compliant contact controller
 
 Catkin package implementing DS based contact controller which was proposed in
@@ -5,8 +6,6 @@ Catkin package implementing DS based contact controller which was proposed in
 ```
 Mirrazavi Salehian, S. S. and Billard, A. (2018) A Dynamical System Based Approach for Controlling Robotic Manipulators During Non-contact/Contact Transitions. IEEE Robotics and Automation Letters (RA-L).
 ```
-
-[![Build Status](https://magnum.travis-ci.com/epfl-lasa/passive-ds-control.svg?token=BqUQb763tsVV4QyzLgBy&branch=master)](https://magnum.travis-ci.com/epfl-lasa/passive-ds-control)
 
 # Dependences 
 
