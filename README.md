@@ -6,6 +6,8 @@ Catkin package implementing DS based contact controller which was proposed in
 ```
 Mirrazavi Salehian, S. S. and Billard, A. (2018) A Dynamical System Based Approach for Controlling Robotic Manipulators During Non-contact/Contact Transitions. IEEE Robotics and Automation Letters (RA-L).
 ```
+You can find a use case study of this here:
+[https://www.youtube.com/embed/fhfBBMH4XVg](https://www.youtube.com/embed/fhfBBMH4XVg)
 
 # Dependences 
 
