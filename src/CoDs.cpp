@@ -123,7 +123,7 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,Vector
 {
 
 	//if ((Normal.rows()==Dimen_state_)&&(q2.rows()==Dimen_state_)&&(q3.rows()==Dimen_state_)&&((N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<0.0001))
-	if ((Normal.rows()==Dimen_state_)&&(q2.rows()==Dimen_state_)&&(q3.rows()==Dimen_state_)&&((N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<0.1))
+	if ((Normal.rows()==Dimen_state_)&&(q2.rows()==Dimen_state_)&&(q3.rows()==Dimen_state_)&&((Normal.transpose()*q2+Normal.transpose()*q3+q2.transpose()*q3)(0,0)<0.1))
 	{
 	}
 	else
@@ -133,9 +133,9 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,Vector
 		cout<<"Normal "<<Normal.cols()<<endl;cout<<Normal<<endl;
 		cout<<"q2 "<<q2.cols()<<endl;cout<<q2<<endl;
 		cout<<"q3 "<<q3.cols()<<endl;cout<<q3<<endl;
-		cout<<"(q2.transpose()*q3_)(0,0) "<<(q2.transpose()*q3_)(0,0)<<endl;
-		cout<<"(N_.transpose()*q3_)(0,0) "<<(N_.transpose()*q3_)(0,0)<<endl;
-		cout<<"(N_.transpose()*q2_)(0,0) "<<(N_.transpose()*q2_)(0,0)<<endl;
+		cout<<"(q2.transpose()*q3_)(0,0) "<<(q2.transpose()*q3)(0,0)<<endl;
+		cout<<"(N_.transpose()*q3_)(0,0) "<<(Normal.transpose()*q3)(0,0)<<endl;
+		cout<<"(N_.transpose()*q2_)(0,0) "<<(Normal.transpose()*q2)(0,0)<<endl;
 		Error();
 	}
 
@@ -261,7 +261,7 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 	{
 		Motion_Phases_[2]=true;
 		//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
-		X_Target_Modulated_=Desired_Leaving_point_+5*N_;
+		X_Target_Modulated_=Desired_Leaving_point_+0.5*N_;
 
 		//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
 	}
