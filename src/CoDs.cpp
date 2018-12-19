@@ -133,7 +133,9 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,Vector
 		cout<<"Normal "<<Normal.cols()<<endl;cout<<Normal<<endl;
 		cout<<"q2 "<<q2.cols()<<endl;cout<<q2<<endl;
 		cout<<"q3 "<<q3.cols()<<endl;cout<<q3<<endl;
-		cout<<"(N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0) "<<(N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<<endl;
+		cout<<"(q2.transpose()*q3_)(0,0) "<<(q2.transpose()*q3_)(0,0)<<endl;
+		cout<<"(N_.transpose()*q3_)(0,0) "<<(N_.transpose()*q3_)(0,0)<<endl;
+		cout<<"(N_.transpose()*q2_)(0,0) "<<(N_.transpose()*q2_)(0,0)<<endl;
 		Error();
 	}
 
