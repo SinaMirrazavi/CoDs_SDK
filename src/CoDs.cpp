@@ -99,6 +99,8 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	Motion_Phases_[2]=false;
 	Motion_Phases_[3]=false;
 
+	handle_Omega_=20;
+
 	Omega_=1/Gammma_Threshold_;
 	nu_=-delta_dx_;
 
@@ -131,7 +133,9 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,Vector
 		cout<<"Normal "<<Normal.cols()<<endl;cout<<Normal<<endl;
 		cout<<"q2 "<<q2.cols()<<endl;cout<<q2<<endl;
 		cout<<"q3 "<<q3.cols()<<endl;cout<<q3<<endl;
-		cout<<"(N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0) "<<(N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<<endl;
+		cout<<"(q2.transpose()*q3_)(0,0) "<<(q2.transpose()*q3_)(0,0)<<endl;
+		cout<<"(N_.transpose()*q3_)(0,0) "<<(N_.transpose()*q3_)(0,0)<<endl;
+		cout<<"(N_.transpose()*q2_)(0,0) "<<(N_.transpose()*q2_)(0,0)<<endl;
 		Error();
 	}
 
@@ -220,7 +224,8 @@ void CoDs::Set_Contact_point(VectorXd Contact_point)
  */
 VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 {
-	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
+//	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
+	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(State_of_surface_is_set_))
 	{
 	}
 	else
@@ -237,34 +242,40 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 
 
 	Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
-	Desired_Leaving_point_=2*Desired_Leaving_point_-Desired_Contact_point_;
-
-
+	if (Leaving_point_)
+	{
+		Desired_Leaving_point_=2*Desired_Leaving_point_-Desired_Contact_point_;
+	}
+	else
+	{
+		Desired_Leaving_point_=(Leaving_point+Desired_Contact_point_)/2;
+	}
 	X_Target_Modulated_=X_Target;
 	Gamma_Modulated_Value_=Gamma_Value_;
 
-//	if (Gamma_Value_<>)
-//	{
-	cout<<"Gamma_Value_ "<<Gamma_Value_<<" "<<(Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0))<<endl;
-		Gamma_Modulated_Value_=Gamma_Value_+(Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
-		if (Gamma_Modulated_Value_<=epsilon)
-		{
-			Motion_Phases_[2]=true;
-			//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
-			X_Target_Modulated_=Desired_Leaving_point_+N_;
-			//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
-		}
+	//	if (Gamma_Value_<>)
+	//	{
+	cout<<"Gamma_Value_ "<<Gamma_Value_<<" "<<(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0))<<endl;
+	Gamma_Modulated_Value_=Gamma_Value_+(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
+	if (Gamma_Modulated_Value_<=epsilon)
+	{
+		Motion_Phases_[2]=true;
+		//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
+		X_Target_Modulated_=Desired_Leaving_point_+5*N_;
+
+		//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
+	}
 
 
-		/*	if (-handle_double_>0)
+	/*	if (-handle_double_>0)
 		{
 			Motion_Phases_[3]=true;
 			Gamma_Modulated_Value_=20;
 			X_Target_Modulated_=Desired_Leaving_point_+N_;
 		}
-*/
-		//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
-//	}
+	 */
+	//	cout<<"Gamma_Modulated_Value_ "<<Gamma_Modulated_Value_<<" "<<Gamma_Value_<<" "<<handle_double_<<" handle_double_/epsilon "<<handle_double_/epsilon<<" "<<exp(-handle_double_/epsilon)<<" "<<-(handle_double_)*exp(-handle_double_/epsilon)<<endl;
+	//	}
 
 	Gamma_Value_=Gamma_Modulated_Value_;
 	State_of_leaving_is_set_=true;
@@ -318,7 +329,7 @@ MatrixXd CoDs::Calculate_Modulation()
 		if (delta_dx_==0)
 		{
 			cout<<"Elastic "<<endl;
-//			Gamma_Modulated_Value_=Gamma_Value_;
+			//			Gamma_Modulated_Value_=Gamma_Value_;
 
 			qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
 			qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
@@ -327,7 +338,7 @@ MatrixXd CoDs::Calculate_Modulation()
 			if (Gammma_Threshold_<=Gamma_Modulated_Value_)
 			{
 				double handle_Tra=exp((Gammma_Threshold_-Gamma_Modulated_Value_)/(epsilon*epsilon*epsilon));
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
+				handle_N_=-2*handle_Omega_*Omega_*((N_.transpose()*DX_)(0))-handle_Omega_*handle_Omega_*Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q2_=-2*Omega_*((q2_.transpose()*DX_)(0))-Omega_*Omega_*((q2_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q3_=-2*Omega_*((q3_.transpose()*DX_)(0))-Omega_*Omega_*((q3_.transpose()*(X_-Desired_Contact_point_))(0));
 
@@ -356,7 +367,7 @@ MatrixXd CoDs::Calculate_Modulation()
 				Motion_Phases_[0]=true;
 				Phase_of_the_motion_=Phase_Transition;
 
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
+				handle_N_=-2*handle_Omega_*Omega_*((N_.transpose()*DX_)(0))-handle_Omega_*handle_Omega_*Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q2_=-2*Omega_*((q2_.transpose()*DX_)(0))-Omega_*Omega_*((q2_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q3_=-2*Omega_*((q3_.transpose()*DX_)(0))-Omega_*Omega_*((q3_.transpose()*(X_-Desired_Contact_point_))(0));
 
@@ -377,7 +388,7 @@ MatrixXd CoDs::Calculate_Modulation()
 				Phase_of_the_motion_=Phase_Contact;
 				Motion_Phases_[1]=true;
 
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Leaving_point_))(0));
+				handle_N_=-2*handle_Omega_*Omega_*((N_.transpose()*DX_)(0))-handle_Omega_*handle_Omega_*Omega_*Omega_*((N_.transpose()*(X_-Desired_Leaving_point_))(0));
 				handle_q2_=-2*Omega_*((q2_.transpose()*DX_)(0))-Omega_*Omega_*((q2_.transpose()*(X_-Desired_Leaving_point_))(0));
 				handle_q3_=-2*Omega_*((q3_.transpose()*DX_)(0))-Omega_*Omega_*((q3_.transpose()*(X_-Desired_Leaving_point_))(0));
 
@@ -393,7 +404,7 @@ MatrixXd CoDs::Calculate_Modulation()
 		else
 		{
 			cout<<"Inelastic "<<endl;
-//			Gamma_Modulated_Value_=Gamma_Value_;
+			//			Gamma_Modulated_Value_=Gamma_Value_;
 
 			qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
 			qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
@@ -401,21 +412,21 @@ MatrixXd CoDs::Calculate_Modulation()
 
 			if (Gammma_Threshold_<=Gamma_Modulated_Value_)
 			{
-				double handle_Tra=exp((Gammma_Threshold_-Gamma_Value_)/epsilon);
+				double handle_Tra=exp((Gammma_Threshold_-Gamma_Value_)/(epsilon*epsilon));
 				Motion_Phases_[0]=true;
 				Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
 
 				if (Normal_velocity_robot_real_(0)<delta_dx_)
 				{
-					handle_N_=-Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
+					handle_N_=-handle_Omega_*Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
 				}
 				else if ((delta_dx_<Normal_velocity_robot_real_(0))&&(Normal_velocity_robot_real_(0)<0))
 				{
-					handle_N_=(((N_.transpose()*(X_-Desired_Contact_point_))(0))*(N_.transpose()*DX_)(0)-((N_.transpose()*(X_-Desired_Contact_point_))(0))*delta_dx_)/(Omega_*Omega_*delta_dx_);
+					handle_N_=((handle_Omega_*Omega_*handle_Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0))+handle_Omega_*Omega_*nu_)/delta_dx_)*(N_.transpose()*DX_)(0)-handle_Omega_*Omega_*handle_Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 				}
 				else if (0<=Normal_velocity_robot_real_(0))
 				{
-					handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
+					handle_N_=-2*handle_Omega_*Omega_*((N_.transpose()*DX_)(0))-handle_Omega_*handle_Omega_*Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 				}
 
 				handle_q2_=-2*Omega_*((q2_.transpose()*DX_)(0))-Omega_*Omega_*((q2_.transpose()*(X_-Desired_Contact_point_))(0));
@@ -433,7 +444,7 @@ MatrixXd CoDs::Calculate_Modulation()
 				Motion_Phases_[1]=false;
 				cout<<"Free Motion"<<endl;
 			}
-			else if((Gamma_Modulated_Value_<Gammma_Threshold_)&&(epsilon<Gamma_Modulated_Value_)&&(!Motion_Phases_[1]))
+			else if((Gamma_Modulated_Value_<Gammma_Threshold_)&&(epsilon*epsilon<Gamma_Modulated_Value_)&&(!Motion_Phases_[1]))
 			{
 				Motion_Phases_[0]=true;
 				Phase_of_the_motion_=Phase_Transition;
@@ -441,22 +452,22 @@ MatrixXd CoDs::Calculate_Modulation()
 
 				if (Normal_velocity_robot_real_(0)<delta_dx_)
 				{
-					handle_N_=-Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
+					handle_N_=-handle_Omega_*Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
 					cout<<"It is going faster! "<<handle_N_<<" "<<(N_.transpose()*DX_)(0)<<endl;
 				}
 				else if ((delta_dx_<Normal_velocity_robot_real_(0))&&(Normal_velocity_robot_real_(0)<0))
 				{
-					handle_N_=(((N_.transpose()*(X_-Desired_Contact_point_))(0))*(N_.transpose()*DX_)(0)-((N_.transpose()*(X_-Desired_Contact_point_))(0))*delta_dx_)/(Omega_*Omega_*delta_dx_);
+					handle_N_=((handle_Omega_*Omega_*handle_Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0))+handle_Omega_*Omega_*nu_)/delta_dx_)*(N_.transpose()*DX_)(0)-handle_Omega_*Omega_*handle_Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 					cout<<"It is going correct! "<<Lambda_(0,0)<<" "<<(N_.transpose()*DX_)(0)<<endl;
 				}
 				else if (0<=Normal_velocity_robot_real_(0))
 				{
-					handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
+					handle_N_=-2*handle_Omega_*Omega_*((N_.transpose()*DX_)(0))-handle_Omega_*handle_Omega_*Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 					cout<<"It is not going to the desired direction! "<<Lambda_(0,0)<<" "<<(N_.transpose()*DX_)(0)<<endl;
 				}
 
 
-//				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
+				//				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q2_=-2*Omega_*((q2_.transpose()*DX_)(0))-Omega_*Omega_*((q2_.transpose()*(X_-Desired_Contact_point_))(0));
 				handle_q3_=-2*Omega_*((q3_.transpose()*DX_)(0))-Omega_*Omega_*((q3_.transpose()*(X_-Desired_Contact_point_))(0));
 
@@ -472,7 +483,7 @@ MatrixXd CoDs::Calculate_Modulation()
 
 
 			}
-			else if  ((Gamma_Modulated_Value_<=epsilon)||(Motion_Phases_[1]))
+			else if  ((Gamma_Modulated_Value_<=epsilon*epsilon)||(Motion_Phases_[1]))
 			{
 				Phase_of_the_motion_=Phase_Contact;
 				Motion_Phases_[1]=true;
