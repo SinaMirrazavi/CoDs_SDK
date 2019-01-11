@@ -241,7 +241,8 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 	}
 
 
-	Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
+	Desired_Leaving_point_=Leaving_point;
+	//Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
 	if (Leaving_point_)
 	{
 		Desired_Leaving_point_=2*Desired_Leaving_point_-Desired_Contact_point_;
@@ -261,7 +262,7 @@ VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
 	{
 		Motion_Phases_[2]=true;
 		//	X_Target_Modulated_=2*Desired_Leaving_point_-Desired_Contact_point_+N_*(N_.transpose()*(X_Target-Desired_Contact_point_));
-		X_Target_Modulated_=Desired_Leaving_point_+0.5*N_;
+		X_Target_Modulated_=Leaving_point+0.5*N_;
 
 		//	X_Target_Modulated_=Desired_Contact_point_+(Desired_Leaving_point_-Desired_Contact_point_)/2;
 	}
