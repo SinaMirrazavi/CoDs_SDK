@@ -99,10 +99,10 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	Motion_Phases_[2]=false;
 	Motion_Phases_[3]=false;
 
-	handle_Omega_=20;
+	handle_Omega_=5;
 
 	Omega_=1/Gammma_Threshold_;
-	nu_=-delta_dx_;
+	nu_=-0.0*delta_dx_;
 
 	Phase_of_the_motion_=Phase_Free_motion;
 	everyfalse();
