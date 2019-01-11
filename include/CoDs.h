@@ -40,10 +40,6 @@ public:
 	void initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point);
 	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface);
 	void Set_State(VectorXd State,VectorXd DState,VectorXd DState_real,VectorXd Original_Dynamic);
-	void Set_Contact_point(VectorXd Contact_point);
-	VectorXd Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target);
-	void Set_Mass_Matrix(MatrixXd M);
-
 
 	MatrixXd Calculate_Modulation();
 
@@ -67,8 +63,6 @@ private:
 	bool Contact_point_;
 	bool State_of_system_is_set_;
 	bool State_of_surface_is_set_;
-	bool State_of_contact_is_set_;
-	bool State_of_leaving_is_set_;
 
 	bool Motion_Phases_[1+1+1+1];// Phase 0=transition phase 1= Contact phase 2=leaving phase 3 everything is done
 
@@ -78,7 +72,6 @@ private:
 
 
 	double Gamma_Value_;
-	double Gamma_Modulated_Value_;
 	double Gammma_Threshold_;
 
 	double delta_dx_;
@@ -100,9 +93,6 @@ private:
 	VectorXd q3_;
 	VectorXd Point_;
 
-	VectorXd Desired_Contact_point_;
-	VectorXd Desired_Leaving_point_;
-
 	VectorXd X_;
 	VectorXd DX_;
 	VectorXd DXState_real_;
@@ -115,9 +105,6 @@ private:
 	MatrixXd Lambda_;
 	MatrixXd Lambda_Bold_;
 	MatrixXd M_;
-
-
-	MatrixXd InvMass_;
 
 
 	VectorXd Normal_velocity_robot_;

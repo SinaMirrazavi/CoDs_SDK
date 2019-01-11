@@ -73,10 +73,8 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	DXState_real_.resize(Dimen_state_);
 	Point_.resize(Dimen_state_);
 	X_Target_Modulated_.resize(Dimen_state_);
-	Desired_Contact_point_.resize(Dimen_state_);
-	Desired_Leaving_point_.resize(Dimen_state_);
 
-	Gamma_Modulated_Value_=0;
+	Gamma_Value_=0;
 
 
 
@@ -85,7 +83,6 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	Lambda_.resize(Dimen_state_,Dimen_state_); 		Lambda_.setZero();
 	Lambda_Bold_.resize(Dimen_state_,Dimen_state_); Lambda_Bold_.setZero();
 	M_.resize(Dimen_state_,Dimen_state_); 			M_.setZero();
-	InvMass_.resize(Dimen_state_,Dimen_state_); 	InvMass_.setIdentity();
 
 
 	qF_.resize(Dimen_state_);						qF_.setZero();
@@ -181,113 +178,6 @@ void CoDs::Set_State(VectorXd State,VectorXd DState,VectorXd DState_real,VectorX
 	State_of_system_is_set_=true;
 }
 
-/**
- *   @brief Setting the desired contact point
- *
- *   @param  Contact_point is the desired contact point.
- *   @return void
- */
-void CoDs::Set_Contact_point(VectorXd Contact_point)
-{
-
-	if ((Contact_point.rows()==Dimen_state_)&&(Contact_point_)&&(State_of_surface_is_set_))
-	{
-	}
-	else
-	{
-		cout<<"Something is wrong in Set_Contact_point"<<endl;
-		cout<<"Contact_point_ is should be true "<<Contact_point_<<endl;
-		cout<<"State_of_surface_is_set_ is should be true (Set the surface definition before setting this) "<<State_of_surface_is_set_<<endl;
-		cout<<"Dimension of states is: "<<Dimen_state_<<endl;
-		cout<<"Dimension of Contact_point is: "<<Contact_point.rows()<<endl;
-		Error();
-	}
-
-
-	Desired_Contact_point_=Contact_point+N_*(N_.transpose()*(Point_-Contact_point));
-
-	State_of_contact_is_set_=true;
-	/*	cout<<"(N_.transpose()*(Point_-Contact_point)) "<<endl;cout<<N_*(N_.transpose()*(Point_-Contact_point))<<endl;
-	cout<<"Contact_point "<<endl;cout<<Contact_point<<endl;
-	cout<<"Point_ "<<endl;cout<<Point_<<endl;
-	cout<<"Desired_Contact_point_ "<<endl;cout<<Desired_Contact_point_<<endl;
-	cout<<"Contact_point "<<endl;cout<<Contact_point<<endl;*/
-}
-
-/**
- *   @brief Setting the desired leaving point
- *
- *   @param  Leaving_point is the desired leaving point.
- *   @param	 X_Target is the orginal taget of teh system.
- *   @return void
- */
-VectorXd  CoDs::Set_Leaving_point(VectorXd Leaving_point,VectorXd X_Target)
-{
-//	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(Leaving_point_)&&(State_of_surface_is_set_))
-	if ((Leaving_point.rows()==Dimen_state_)&&(X_Target.rows()==Dimen_state_)&&(State_of_surface_is_set_))
-	{
-	}
-	else
-	{
-		cout<<"Something is wrong in Set_Leaving_point"<<endl;
-		cout<<"Leaving_point_ is should be true "<<Leaving_point_<<endl;
-		cout<<"State_of_surface_is_set_ is should be true (Set the surface definition before setting this) "<<State_of_surface_is_set_<<endl;
-		cout<<"Dimension of states is: "<<Dimen_state_<<endl;
-		cout<<"Dimension of Leaving_point is: "<<Leaving_point.rows()<<endl;
-		cout<<"Dimension of X_Target is: "<<X_Target.rows()<<endl;
-		cout<<"Dimension of X_Target_Modulated_ is: "<<X_Target_Modulated_.rows()<<endl;
-		Error();
-	}
-
-
-	Desired_Leaving_point_=Leaving_point;
-	//Desired_Leaving_point_=Leaving_point+N_*(N_.transpose()*(Point_-Leaving_point));
-	if (Leaving_point_)
-	{
-		Desired_Leaving_point_=2*Desired_Leaving_point_-Desired_Contact_point_;
-	}
-	else
-	{
-		Desired_Leaving_point_=(Leaving_point+Desired_Contact_point_)/2;
-	}
-	X_Target_Modulated_=X_Target;
-	Gamma_Modulated_Value_=Gamma_Value_;
-
-	cout<<"Gamma_Value_ "<<Gamma_Value_<<" "<<(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0))<<endl;
-	Gamma_Modulated_Value_=Gamma_Value_+(1.05*Gammma_Threshold_-((Leaving_point-Desired_Contact_point_).transpose()*(Leaving_point-X_))(0,0))*exp(-10*((Leaving_point-X_).transpose()*(Leaving_point-X_))(0,0));
-	Gamma_Modulated_Value_=Gamma_Value_;
-	if (Gamma_Modulated_Value_<=epsilon)
-	{
-		Motion_Phases_[2]=true;
-		X_Target_Modulated_=Leaving_point+0.5*N_;
-	}
-
-	Gamma_Value_=Gamma_Modulated_Value_;
-	State_of_leaving_is_set_=true;
-	return X_Target_Modulated_;
-}
-
-/**
- *   @brief Setting the mass matrix of the robot, it should be in the Cartesian space and it should be 3$\times$3
- *
- *   @param  State is the states of the system.
- *   @return void
- */
-void CoDs::Set_Mass_Matrix(MatrixXd M)
-{
-
-	if ((M.cols()==Dimen_state_)&&(M.rows()==Dimen_state_))
-	{
-	}
-	else
-	{
-		cout<<"Something is wrong in Set_Mass_Matrix"<<endl;
-		cout<<"Mass matrix "<<M<<endl;
-		Error();
-	}
-
-	InvMass_=M.inverse();
-}
 
 /**
  *   @brief Calculate the modulation function
@@ -302,8 +192,6 @@ MatrixXd CoDs::Calculate_Modulation()
 		cout<<"Even though you forgot setting sth, you called Calculate_Modulation"<<endl;
 		cout<<"State_of_system_is_set_ "<<State_of_system_is_set_<<endl;
 		cout<<"State_of_surface_is_set_ "<<State_of_surface_is_set_<<endl;
-		cout<<"State_of_leaving_is_set_ should be "<<Leaving_point_<<" However it is "<<State_of_leaving_is_set_<<endl;
-		cout<<"State_of_contact_is_set_ should be "<<Contact_point_<<" However it is "<<State_of_contact_is_set_<<endl;
 		Error();
 	}
 	Lambda_.setIdentity();
@@ -311,162 +199,89 @@ MatrixXd CoDs::Calculate_Modulation()
 
 	if(!Motion_Phases_[3])
 	{
-		if (delta_dx_==0)
+
+		qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
+		qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
+		qF_(2)=((F_.transpose()*q3_)(0))/((F_.transpose()*F_)(0,0));
+
+		if (Gammma_Threshold_<=Gamma_Value_)
 		{
-			cout<<"Elastic "<<endl;
-			//			Gamma_Modulated_Value_=Gamma_Value_;
+			double handle_Tra=exp((Gammma_Threshold_-Gamma_Value_)/(epsilon*epsilon));
+			Motion_Phases_[0]=true;
+			Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
 
-			qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
-			qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
-			qF_(2)=((F_.transpose()*q3_)(0))/((F_.transpose()*F_)(0,0));
-
-			if (Gammma_Threshold_<=Gamma_Modulated_Value_)
+			if (Normal_velocity_robot_real_(0)<delta_dx_)
 			{
-				double handle_Tra=exp((Gammma_Threshold_-Gamma_Modulated_Value_)/(epsilon*epsilon*epsilon));
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
-
-				Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-				Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-				Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
-
-				Lambda_Bold_(0,0)=(Lambda_(0,1)-1)*handle_Tra+1; 	Lambda_Bold_(0,1)=Lambda_(0,1)*handle_Tra;			Lambda_Bold_(0,2)=Lambda_(0,2)*handle_Tra;
-				Lambda_Bold_(1,0)=Lambda_(1,1)*handle_Tra; 			Lambda_Bold_(1,1)=(Lambda_(1,1)-1)*handle_Tra+1;	Lambda_Bold_(1,2)=Lambda_(1,2)*handle_Tra;
-				Lambda_Bold_(2,0)=Lambda_(2,1)*handle_Tra; 			Lambda_Bold_(2,1)=Lambda_(2,1)*handle_Tra;			Lambda_Bold_(2,2)=(Lambda_(2,2)-1)*handle_Tra+1;
-
-				cout<<"Lambda_"<<endl;cout<<Lambda_<<endl;
-				cout<<"Lambda_Bold_"<<endl;cout<<Lambda_Bold_<<endl;
-
-				cout<<"Omega_ "<<Omega_<<endl;
-				cout<<"(N_.transpose()*DX_) "<<N_.transpose()*DX_<<endl;
-				cout<<"N_.transpose()*(X_-Desired_Contact_point_) "<<N_.transpose()*(X_-Desired_Contact_point_)<<endl;
-
-
-				Phase_of_the_motion_=Phase_Free_motion;
-				Motion_Phases_[1]=false;
-				cout<<"Free Motion"<<endl;
+				handle_N_=-Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
 			}
-			else if((Gamma_Modulated_Value_<Gammma_Threshold_)&&(epsilon<Gamma_Modulated_Value_)&&(!Motion_Phases_[1]))
+			else if ((delta_dx_<Normal_velocity_robot_real_(0))&&(Normal_velocity_robot_real_(0)<0))
 			{
-				Motion_Phases_[0]=true;
-				Phase_of_the_motion_=Phase_Transition;
-
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
-
-				Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-				Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-				Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
-
-
-				Lambda_Bold_=Lambda_;
-
-				cout<<"It is going faster! "<<Gamma_Modulated_Value_<<" "<<(N_.transpose()*DX_)(0)<<endl;
-
-				Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
-
+				handle_N_=((Omega_*Omega_*(Gamma_Value_)+Omega_*nu_)/delta_dx_)*(N_.transpose()*DX_)(0)-Omega_*Omega_*(Gamma_Value_);
 			}
-			else if  ((Gamma_Modulated_Value_<=epsilon)||(Motion_Phases_[1]))
+			else if (0<=Normal_velocity_robot_real_(0))
 			{
-				Phase_of_the_motion_=Phase_Contact;
-				Motion_Phases_[1]=true;
-
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Leaving_point_))(0));
-
-				Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-				Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-				Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
-
-				Lambda_Bold_=Lambda_;
-
-				cout<<"The contact is established "<<Lambda_(0,0)<<endl;
+				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*(Gamma_Value_);
 			}
+
+			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
+			Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
+			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
+
+			Lambda_Bold_(0,0)=(Lambda_(0,1)-1)*handle_Tra+1; 	Lambda_Bold_(0,1)=Lambda_(0,1)*handle_Tra;			Lambda_Bold_(0,2)=Lambda_(0,2)*handle_Tra;
+			Lambda_Bold_(1,0)=Lambda_(1,1)*handle_Tra; 			Lambda_Bold_(1,1)=(Lambda_(1,1)-1)*handle_Tra+1;	Lambda_Bold_(1,2)=Lambda_(1,2)*handle_Tra;
+			Lambda_Bold_(2,0)=Lambda_(2,1)*handle_Tra; 			Lambda_Bold_(2,1)=Lambda_(2,1)*handle_Tra;			Lambda_Bold_(2,2)=(Lambda_(2,2)-1)*handle_Tra+1;
+
+			Phase_of_the_motion_=Phase_Free_motion;
+			Motion_Phases_[1]=false;
+			cout<<"Free Motion"<<endl;
 		}
-		else
+		else if((Gamma_Value_<Gammma_Threshold_)&&(epsilon*epsilon<Gamma_Value_)&&(!Motion_Phases_[1]))
 		{
-			cout<<"Inelastic "<<endl;
-			//			Gamma_Modulated_Value_=Gamma_Value_;
+			Motion_Phases_[0]=true;
+			Phase_of_the_motion_=Phase_Transition;
+			Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
 
-			qF_(0)=((F_.transpose()*N_)(0))/((F_.transpose()*F_)(0,0));
-			qF_(1)=((F_.transpose()*q2_)(0))/((F_.transpose()*F_)(0,0));
-			qF_(2)=((F_.transpose()*q3_)(0))/((F_.transpose()*F_)(0,0));
-
-			if (Gammma_Threshold_<=Gamma_Modulated_Value_)
+			if (Normal_velocity_robot_real_(0)<delta_dx_)
 			{
-				double handle_Tra=exp((Gammma_Threshold_-Gamma_Value_)/(epsilon*epsilon));
-				Motion_Phases_[0]=true;
-				Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
-
-				if (Normal_velocity_robot_real_(0)<delta_dx_)
-				{
-					handle_N_=-Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
-				}
-				else if ((delta_dx_<Normal_velocity_robot_real_(0))&&(Normal_velocity_robot_real_(0)<0))
-				{
-					handle_N_=((Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0))+Omega_*nu_)/delta_dx_)*(N_.transpose()*DX_)(0)-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
-				}
-				else if (0<=Normal_velocity_robot_real_(0))
-				{
-					handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
-				}
-
-				Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-				Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-				Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
-
-				Lambda_Bold_(0,0)=(Lambda_(0,1)-1)*handle_Tra+1; 	Lambda_Bold_(0,1)=Lambda_(0,1)*handle_Tra;			Lambda_Bold_(0,2)=Lambda_(0,2)*handle_Tra;
-				Lambda_Bold_(1,0)=Lambda_(1,1)*handle_Tra; 			Lambda_Bold_(1,1)=(Lambda_(1,1)-1)*handle_Tra+1;	Lambda_Bold_(1,2)=Lambda_(1,2)*handle_Tra;
-				Lambda_Bold_(2,0)=Lambda_(2,1)*handle_Tra; 			Lambda_Bold_(2,1)=Lambda_(2,1)*handle_Tra;			Lambda_Bold_(2,2)=(Lambda_(2,2)-1)*handle_Tra+1;
-
-				Phase_of_the_motion_=Phase_Free_motion;
-				Motion_Phases_[1]=false;
-				cout<<"Free Motion"<<endl;
+				handle_N_=-Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
+				cout<<"It is going faster! "<<handle_N_<<" "<<(N_.transpose()*DX_)(0)<<endl;
 			}
-			else if((Gamma_Modulated_Value_<Gammma_Threshold_)&&(epsilon*epsilon<Gamma_Modulated_Value_)&&(!Motion_Phases_[1]))
+			else if ((delta_dx_<Normal_velocity_robot_real_(0))&&(Normal_velocity_robot_real_(0)<0))
 			{
-				Motion_Phases_[0]=true;
-				Phase_of_the_motion_=Phase_Transition;
-				Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
-
-				if (Normal_velocity_robot_real_(0)<delta_dx_)
-				{
-					handle_N_=-Omega_*((N_.transpose()*DX_)(0)-(delta_dx_+nu_));
-					cout<<"It is going faster! "<<handle_N_<<" "<<(N_.transpose()*DX_)(0)<<endl;
-				}
-				else if ((delta_dx_<Normal_velocity_robot_real_(0))&&(Normal_velocity_robot_real_(0)<0))
-				{
-					handle_N_=((Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0))+Omega_*nu_)/delta_dx_)*(N_.transpose()*DX_)(0)-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
-					cout<<"It is going correct! "<<Lambda_(0,0)<<" "<<(N_.transpose()*DX_)(0)<<endl;
-				}
-				else if (0<=Normal_velocity_robot_real_(0))
-				{
-					handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Contact_point_))(0));
-					cout<<"It is not going to the desired direction! "<<Lambda_(0,0)<<" "<<(N_.transpose()*DX_)(0)<<endl;
-				}
-
-				Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-				Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-				Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
-
-				Lambda_Bold_=Lambda_;
-
+				handle_N_=((Omega_*Omega_*(Gamma_Value_)+Omega_*nu_)/delta_dx_)*(N_.transpose()*DX_)(0)-Omega_*Omega_*(Gamma_Value_);
+				cout<<"It is going correct! "<<Lambda_(0,0)<<" "<<(N_.transpose()*DX_)(0)<<endl;
 			}
-			else if  ((Gamma_Modulated_Value_<=epsilon*epsilon)||(Motion_Phases_[1]))
+			else if (0<=Normal_velocity_robot_real_(0))
 			{
-				Phase_of_the_motion_=Phase_Contact;
-				Motion_Phases_[1]=true;
-				Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
-
-				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*((N_.transpose()*(X_-Desired_Leaving_point_))(0));
-
-				Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-				Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-				Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
-
-				Lambda_Bold_=Lambda_;
-
-				cout<<"The contact is established "<<Lambda_(0,0)<<endl;
+				handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*(Gamma_Value_);
+				cout<<"It is not going to the desired direction! "<<Lambda_(0,0)<<" "<<(N_.transpose()*DX_)(0)<<endl;
 			}
+
+			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
+			Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
+			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
+
+			Lambda_Bold_=Lambda_;
 
 		}
+		else if  ((Gamma_Value_<=epsilon*epsilon)||(Motion_Phases_[1]))
+		{
+			Phase_of_the_motion_=Phase_Contact;
+			Motion_Phases_[1]=true;
+			Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
+
+			handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*(Gamma_Value_);
+
+			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
+			Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
+			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
+
+			Lambda_Bold_=Lambda_;
+
+			cout<<"The contact is established "<<Lambda_(0,0)<<endl;
+		}
+
+
 	} else
 	{
 		Phase_of_the_motion_=Phase_Everything_is_done;
@@ -523,20 +338,7 @@ inline bool CoDs::everythingisreceived()
 	flag=State_of_system_is_set_;
 	flag=State_of_surface_is_set_;*/
 
-	if ((Contact_point_)&&(Leaving_point_))
-	{
-		return ((State_of_system_is_set_)&&(State_of_surface_is_set_)&&(State_of_contact_is_set_)&&(State_of_leaving_is_set_));
-	}
-	else if (Contact_point_)
-	{
-		return ((State_of_system_is_set_)&&(State_of_surface_is_set_)&&(State_of_contact_is_set_));
-	}
-	else
-	{
 		return ((State_of_system_is_set_)&&(State_of_surface_is_set_));
-
-	}
-
 
 }
 
@@ -549,8 +351,6 @@ inline void CoDs::everyfalse()
 {
 	State_of_system_is_set_=false;
 	State_of_system_is_set_=false;
-	State_of_contact_is_set_=false;
-	State_of_leaving_is_set_=false;
 }
 
 
@@ -561,7 +361,7 @@ inline void CoDs::everyfalse()
  */
 double CoDs::Get_Modulated_Surface()
 {
-	return Gamma_Modulated_Value_;
+	return Gamma_Value_;
 }
 
 
