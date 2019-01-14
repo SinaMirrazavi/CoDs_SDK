@@ -71,7 +71,6 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	N_.resize(Dimen_state_);	q2_.resize(Dimen_state_);	q3_.resize(Dimen_state_);
 	X_.resize(Dimen_state_);	DX_.resize(Dimen_state_);	F_.resize(Dimen_state_);
 	DXState_real_.resize(Dimen_state_);
-	Point_.resize(Dimen_state_);
 	X_Target_Modulated_.resize(Dimen_state_);
 
 	Gamma_Value_=0;
@@ -112,10 +111,9 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
  *   @param  Normal is the current normal vector to the surface.
  *   @param  q2 is the tangential vector to N;
  *   @param  q3 is the tangential vector to N and q3;
- *   @param  Point_on_surface is a point on the surface;
  *   @return void
  */
-void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,VectorXd Point_on_surface)
+void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3)
 {
 
 	//if ((Normal.rows()==Dimen_state_)&&(q2.rows()==Dimen_state_)&&(q3.rows()==Dimen_state_)&&((N_.transpose()*q2_+N_.transpose()*q3_+q2.transpose()*q3_)(0,0)<0.0001))
@@ -141,7 +139,6 @@ void CoDs::Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3,Vector
 	N_=Normal;
 	q2_=q2;
 	q3_=q3;
-	Point_=Point_on_surface;
 
 	Q_.col(0)=N_;	Q_.col(1)=q2_;	Q_.col(2)=q3_;
 
