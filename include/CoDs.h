@@ -31,13 +31,14 @@ using namespace std;
 using namespace Eigen;
 
 const double epsilon=10e-3;
+const double Gain_=5;
 
 enum ENUM_Phase{Phase_Free_motion=0,Phase_Transition,Phase_Contact,Phase_Everything_is_done};
 
 class CoDs
 {
 public:
-	void initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point);
+	void initialize(int Dimen_state,double delta_dx,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point);
 	void Set_Gamma(double Gamma,VectorXd Normal,VectorXd q2,VectorXd q3);
 	void Set_State(VectorXd State,VectorXd DState,VectorXd DState_real,VectorXd Original_Dynamic);
 

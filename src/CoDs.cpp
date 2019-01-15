@@ -27,14 +27,13 @@
  *
  *   @param  Dimen_state is the dimension of the state. It should be 3!
  *   @param  delta_dx is the desired velocity of the robot at the impact point.
- *   @param  F_d is the desired force of the robot at the contact phase.
  *   @param  Gammma_free_motion is the threshold which defines boundary between the free motion and the transition phases.
  *   @param  define_desired_contact_point is a boolean. If it is true, the robot hits the surfaces at the specified point.
  *   @param  define_desired_leaving_point is a boolean. If it is true, the robot leaves the surfaces at the specified point.
  *   @return void
  */
 //   @param  defined_surface is a boolean. If it is true, the package uses a planner surface defined in  the Gamma class. Otherwise it uses the user defined Gamma function.
-void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point)
+void CoDs::initialize(int Dimen_state,double delta_dx,double Gammma_free_motion, bool define_desired_contact_point, bool define_desired_leaving_point)
 {
 
 	if (Dimen_state==3)
@@ -52,11 +51,6 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 		cout<<"delta_dx should be either zero or negative! "<<delta_dx<<endl;
 		Error();
 	}
-	if (F_d<0)
-	{
-		cout<<"F_d should be positive! "<<F_d<<endl;
-		Error();
-	}
 	Dimen_state_=Dimen_state;
 	//	Surface_=defined_surface;
 	Leaving_point_=define_desired_leaving_point;
@@ -64,7 +58,6 @@ void CoDs::initialize(int Dimen_state,double delta_dx,double F_d,double Gammma_f
 	Gammma_Threshold_=Gammma_free_motion;
 
 	delta_dx_=delta_dx;
-	F_d_=F_d;
 
 
 
@@ -203,7 +196,7 @@ MatrixXd CoDs::Calculate_Modulation()
 
 		if (Gammma_Threshold_<=Gamma_Value_)
 		{
-			double handle_Tra=exp((Gammma_Threshold_-Gamma_Value_)/(epsilon*epsilon));
+			double handle_Tra=exp((Gammma_Threshold_-Gamma_Value_)/(10e-6));
 			Motion_Phases_[0]=true;
 			Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
 
@@ -232,7 +225,7 @@ MatrixXd CoDs::Calculate_Modulation()
 			Motion_Phases_[1]=false;
 			cout<<"Free Motion"<<endl;
 		}
-		else if((Gamma_Value_<Gammma_Threshold_)&&(epsilon*epsilon<Gamma_Value_)&&(!Motion_Phases_[1]))
+		else if((Gamma_Value_<Gammma_Threshold_)&&(epsilon<Gamma_Value_)&&(!Motion_Phases_[1]))
 		{
 			Motion_Phases_[0]=true;
 			Phase_of_the_motion_=Phase_Transition;
@@ -255,13 +248,13 @@ MatrixXd CoDs::Calculate_Modulation()
 			}
 
 			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-			Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
+			Lambda_(1,0)=0;					Lambda_(1,1)=Gain_;					Lambda_(1,2)=0;
+			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=Gain_;
 
 			Lambda_Bold_=Lambda_;
 
 		}
-		else if  ((Gamma_Value_<=epsilon*epsilon)||(Motion_Phases_[1]))
+		else if  ((Gamma_Value_<=epsilon)||(Motion_Phases_[1]))
 		{
 			Phase_of_the_motion_=Phase_Contact;
 			Motion_Phases_[1]=true;
@@ -270,8 +263,8 @@ MatrixXd CoDs::Calculate_Modulation()
 			handle_N_=-2*Omega_*((N_.transpose()*DX_)(0))-Omega_*Omega_*(Gamma_Value_);
 
 			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
-			Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
+			Lambda_(1,0)=0;					Lambda_(1,1)=Gain_;					Lambda_(1,2)=0;
+			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=Gain_;
 
 			Lambda_Bold_=Lambda_;
 
