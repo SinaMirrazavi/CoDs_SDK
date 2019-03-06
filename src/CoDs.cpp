@@ -260,14 +260,14 @@ MatrixXd CoDs::Calculate_Modulation()
 			Motion_Phases_[1]=true;
 			Normal_velocity_robot_real_=Q_.transpose()*DXState_real_;
 
-			handle_N_=-5*2*Omega_*((N_.transpose()*DX_)(0))-25*Omega_*Omega_*(Gamma_Value_);
+			handle_N_=-20*2*Omega_*((N_.transpose()*DX_)(0))-100*Omega_*Omega_*(Gamma_Value_);
 
-/*			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
+			Lambda_(0,0)=handle_N_*qF_(0);	Lambda_(0,1)=handle_N_*qF_(1);		Lambda_(0,2)=handle_N_*qF_(2);
 			Lambda_(1,0)=0;					Lambda_(1,1)=Gain_;					Lambda_(1,2)=0;
-			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=Gain_;*/
-			Lambda_(0,0)=1;					Lambda_(0,1)=0;						Lambda_(0,2)=1;
-			Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
-			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
+			Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=Gain_;
+			// Lambda_(0,0)=1;					Lambda_(0,1)=0;						Lambda_(0,2)=1;
+			// Lambda_(1,0)=0;					Lambda_(1,1)=1;						Lambda_(1,2)=0;
+			// Lambda_(2,0)=0;					Lambda_(2,1)=0;						Lambda_(2,2)=1;
 			Lambda_Bold_=Lambda_;
 
 			cout<<"The contact is established "<<Lambda_(0,0)<<endl;
